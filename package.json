@@ -1,0 +1,18 @@
+{
+  "name": "twitterbot-content-summarization",
+  "version": "0.0.1",
+  "description": "takes content from a page and summarizes it, then generates a tweet",
+  "main": "index.js",
+  "author": "TLQ",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@google-cloud/language": "^1.2.0",
+    "algorithmia": "^0.3.10",
+    "cheerio": "^1.0.0-rc.2",
+    "twit": "^2.2.9"
+  }
+}
