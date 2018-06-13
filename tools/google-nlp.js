@@ -27,7 +27,31 @@ function analyze_sentiment(input_text, sentences=false, magnitude_threshold=0.5)
             const output = {}
 
             //console.log(results)
+            // document level
+            const doc_sentiment = results[0].documentSentiment;
+
+            if (text.length >= 100) {
+                full_text_length = text.length;
+                preview_text = `${text.slice(0,100)}...(${full_text_length} characters)`;
+            }
+            else {
+                preview_text = text;
+            }
+
+            if (debug == true) {
+                console.log("\nperforming sentiment analysis over entire text")
+                console.log(`Text: ${preview_text}`);
+                console.log(`Sentiment score: ${doc_sentiment.score}`);
+                console.log(`Sentiment magnitude: ${doc_sentiment.magnitude}`);
+                console.log("-"*100);
+            }
             
+
+            output.document = {};  //because nested keys are not possible
+            output.document.sentiment = doc_sentiment.score;
+            output.document.magnitude = doc_sentiment.magnitude;
+            
+
             //sentence level (optional)
             if (sentences === true) {
                 const sen_sentiment = results[0].sentences;
@@ -70,30 +94,6 @@ function analyze_sentiment(input_text, sentences=false, magnitude_threshold=0.5)
                 })
             }
             
-            // document level
-            const doc_sentiment = results[0].documentSentiment;
-
-            if (text.length >= 100) {
-                full_text_length = text.length;
-                preview_text = `${text.slice(0,100)}...(${full_text_length} characters)`;
-            }
-            else {
-                preview_text = text;
-            }
-
-            if (debug == true) {
-                console.log("\nperforming sentiment analysis over entire text")
-                console.log(`Text: ${preview_text}`);
-                console.log(`Sentiment score: ${doc_sentiment.score}`);
-                console.log(`Sentiment magnitude: ${doc_sentiment.magnitude}`);
-                console.log("-"*100);
-            }
-            
-
-            output.document = {};  //because nested keys are not possible
-            output.document.sentiment = doc_sentiment.score;
-            output.document.magnitude = doc_sentiment.magnitude;
-        
             return resolve(output);
         })
         .catch(err => {

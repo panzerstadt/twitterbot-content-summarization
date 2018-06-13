@@ -19,6 +19,8 @@ const googleNLP = require('./tools/google-nlp');
 const tweetbot = require('./tools/tweetbot');
 const algorithmia = require('./tools/algorithmia');
 
+const parser = require('./tools/parser');
+
 // definitions
 // sort
 function sortBy(field, reverse, primer){
@@ -46,22 +48,6 @@ function setRunTime(hour, minute) {
 
 function createDateAsUTC(date) {
     return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds()));
-}
-
-
-
-// creates tweet content
-function buildTweet(){
-
-	return new Promise((resolve, reject) => {
-		console.log("checking outputObj");
-		console.log(outputObj);
-
-		// produces a tweet to be posted
-		tweet_to_post = 'hello world testing again!!' + new Date().getTime().toString();
-		outputObj.tweet = tweet_to_post;
-		return resolve(tweet_to_post);
-	})
 }
 
 // INPUTS
@@ -113,26 +99,38 @@ algorithmia.urlAnalyzer(API_KEY, website_url, outputObj)
 
 		Promise.all(google_promises)
 		.then((output) => {
-			if (output.error || output.result === null){
-				reject("google nlp ERROR!!", output.error);
-			} else {
-				console.log('google nlp performed on text');
-				//console.log(output);
-				outputObj.nlp = output;
+			console.log('google nlp performed on text');
+			//console.log(output);
+			outputObj.sentiment = output[0];
+			outputObj.category = output[1];
+			let content_entities = output[2];
 
-				return resolve(output);  
-				// resolve is super important
-				// if you don't put resolve, once js
-				// gets to the end of the file it
-				// executes the next one without waiting to resolve
+			if (debug === true) {
+				console.log("full entities result:");
+				console.log(output[2]);
 			}
+
+			outputObj.entities = []
+			content_entities.forEach(element => {
+				outputObj.entities.push({
+					"name": element.name,
+					"type": element.type,
+					"salience": element.salience
+				})
+			});
+
+			return resolve(outputObj);  
+			// resolve is super important
+			// if you don't put resolve, once js
+			// gets to the end of the file it
+			// executes the next one without waiting to resolve
 		})
 		.catch(err => {
 			reject("one or more google nlp promises not fulfilled");
 		});
 	})
 })
-.then(() => {buildTweet()})
+.then(() => {outputObj.tweet = parser.buildTweet(outputObj)})
 .then(() => {
 	// tweet it
 	tweetbot.tweetbot_tweet(TWITTER_CONFIG, outputObj.tweet, time_target, repeat_hourly=false);
